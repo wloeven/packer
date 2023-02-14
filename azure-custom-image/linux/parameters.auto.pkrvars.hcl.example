@@ -7,3 +7,7 @@ client_app_secret = "SPN secret"
 vnet              = "Existing reachable vnet for builder"
 subnet            = "Existing reachable subnet for builder"
 vnet_rg           = "resourcegroup of the existing vnet"
+azure_tag = {
+  tag1       = ""
+  tag2       = ""
+}

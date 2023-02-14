@@ -6,6 +6,7 @@ packer {
     }
   }
 }
+
 variable "subscription_id" {
   type    = string
   default = ""
@@ -69,7 +70,8 @@ variable "client_app_id" {
 }
 
 variable "client_app_secret" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 variable "vnet" {
