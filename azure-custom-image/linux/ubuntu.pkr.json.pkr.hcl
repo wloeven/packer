@@ -88,9 +88,9 @@ variable "subnet" {
 
 source "azure-arm" "base_image" {
   temp_resource_group_name            = "builder-${var.resource_group}"
-  image_offer                         = "0001-com-ubuntu-server-focal"
-  image_publisher                     = "Canonical"
-  image_sku                           = "20_04-lts-gen2"
+  image_offer                         = "0001-com-ubuntu-server-jammy"
+  image_publisher                     = "canonical"
+  image_sku                           = "22_04-lts"
   location                            = "${var.location}"
   managed_image_name                  = "${var.image_name}"
   managed_image_resource_group_name   = "${var.resource_group}"
@@ -117,82 +117,97 @@ build {
   sources = ["source.azure-arm.base_image"]
 
   provisioner "shell" {
+    name            = "001 - Prepare - Configure permissions"
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     inline          = ["mkdir ${var.image_folder}", "chmod 777 ${var.image_folder}"]
   }
 
   provisioner "shell" {
+    name            = "002 - Prepare - mock apt"
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     script          = "${path.root}/scripts/base/apt-mock.sh"
   }
 
   provisioner "shell" {
+    name             = "003 - Prepare - Configure apt repositories"
     environment_vars = ["DEBIAN_FRONTEND=noninteractive"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     scripts          = ["${path.root}/scripts/base/repos.sh"]
   }
 
   provisioner "shell" {
+    name             = "004 - Prepare - configure apt"
     environment_vars = ["DEBIAN_FRONTEND=noninteractive"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     script           = "${path.root}/scripts/base/apt.sh"
   }
 
   provisioner "shell" {
+    name            = "005 - Prepare - configure limits"
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     script          = "${path.root}/scripts/base/limits.sh"
   }
 
   provisioner "file" {
+    name        = "001 - Prepare - Copy Helpers"
     destination = "${var.helper_script_folder}"
     source      = "${path.root}/scripts/helpers"
   }
 
   provisioner "file" {
+    name        = "002 - Prepare - Copy installers"
     destination = "${var.installer_script_folder}"
     source      = "${path.root}/scripts/installers"
   }
 
   provisioner "file" {
+    name        = "003 - Prepare - Copy post files"
     destination = "${var.image_folder}"
     source      = "${path.root}/post-generation"
   }
 
   provisioner "file" {
+    name        = "004 - Prepare - Copy tests"
     destination = "${var.image_folder}"
     source      = "${path.root}/scripts/tests"
   }
 
   provisioner "file" {
+    name        = "005 - Prepare - Copy toolset"
     destination = "${var.installer_script_folder}/toolset.json"
     source      = "${path.root}/toolsets/toolset-2204.json"
   }
 
   provisioner "shell" {
+    name             = "000 - Build - "
     environment_vars = ["IMAGE_VERSION=${var.image_version}", "IMAGEDATA_FILE=${var.imagedata_file}"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     scripts          = ["${path.root}/scripts/installers/preimagedata.sh"]
   }
 
   provisioner "shell" {
+    name             = "000 - Build - "
     environment_vars = ["IMAGE_VERSION=${var.image_version}", "IMAGE_OS=${var.image_os}", "HELPER_SCRIPTS=${var.helper_script_folder}"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     scripts          = ["${path.root}/scripts/installers/configure-environment.sh"]
   }
 
   provisioner "shell" {
+    name             = "000 - Build - "
     environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     scripts          = ["${path.root}/scripts/installers/complete-snap-setup.sh", "${path.root}/scripts/installers/powershellcore.sh"]
   }
 
   provisioner "shell" {
+    name             = "000 - Build - "
     environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
     execute_command  = "sudo sh -c '{{ .Vars }} pwsh -f {{ .Path }}'"
     scripts          = ["${path.root}/scripts/installers/Install-PowerShellModules.ps1", "${path.root}/scripts/installers/Install-AzureModules.ps1"]
   }
 
   provisioner "shell" {
+    name             = "000 - Build - "
     environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}", "DEBIAN_FRONTEND=noninteractive"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     scripts = [
@@ -220,29 +235,34 @@ build {
   }
 
   provisioner "shell" {
+    name             = "000 - Build - "
     environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
     execute_command  = "sudo sh -c '{{ .Vars }} pwsh -f {{ .Path }}'"
     scripts          = ["${path.root}/scripts/installers/Install-Toolset.ps1", "${path.root}/scripts/installers/Configure-Toolset.ps1"]
   }
 
   provisioner "shell" {
+    name             = "000 - Build - "
     environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     scripts          = ["${path.root}/scripts/installers/pipx-packages.sh"]
   }
 
   provisioner "shell" {
+    name            = "000 - Build - "
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     script          = "${path.root}/scripts/base/snap.sh"
   }
 
   provisioner "shell" {
+    name              = "000 - Build - "
     execute_command   = "/bin/sh -c '{{ .Vars }} {{ .Path }}'"
     expect_disconnect = true
     scripts           = ["${path.root}/scripts/base/reboot.sh"]
   }
 
   provisioner "shell" {
+    name                = "000 - Clean - "
     execute_command     = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     pause_before        = "1m0s"
     scripts             = ["${path.root}/scripts/installers/cleanup.sh"]
@@ -250,22 +270,26 @@ build {
   }
 
   provisioner "shell" {
+    name            = "000 - Clean - "
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     script          = "${path.root}/scripts/base/apt-mock-remove.sh"
   }
 
   provisioner "shell" {
+    name             = "000 - Clean - "
     environment_vars = ["HELPER_SCRIPT_FOLDER=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}", "IMAGE_FOLDER=${var.image_folder}"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
     scripts          = ["${path.root}/scripts/installers/post-deployment.sh"]
   }
 
   provisioner "shell" {
+    name             = "000 - Clean - "
     environment_vars = ["RUN_VALIDATION=${var.run_validation_diskspace}"]
     scripts          = ["${path.root}/scripts/installers/validate-disk-space.sh"]
   }
 
   provisioner "shell" {
+    name            = "000 - Clean - Generalize"
     execute_command = "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'"
     inline          = ["apt-get update", "apt-get upgrade -y", "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"]
     inline_shebang  = "/bin/sh -x"
