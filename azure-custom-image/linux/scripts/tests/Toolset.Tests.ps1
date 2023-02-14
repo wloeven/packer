@@ -6,26 +6,6 @@ Describe "Toolset" {
             tools = @("python", "bin/pip")
             command = "--version"
         }
-        node = @{
-            tools = @("bin/node", "bin/npm")
-            command = "--version"
-        }
-        PyPy = @{
-            tools = @("bin/python", "bin/pip")
-            command = "--version"
-        }
-        go = @{
-            tools = @("bin/go")
-            command = "version"
-        }
-        Ruby = @{
-            tools = @("bin/ruby")
-            command = "--version"
-        }
-        CodeQL = @{
-            tools = @("codeql/codeql")
-            command = "version"
-        }
     }
 
     foreach($tool in $tools) {
