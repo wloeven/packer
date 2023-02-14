@@ -1,4 +1,11 @@
-
+packer {
+  required_plugins {
+    azure = {
+      version = ">= 1.4.0"
+      source  = "github.com/hashicorp/azure"
+    }
+  }
+}
 variable "subscription_id" {
   type    = string
   default = ""
@@ -104,6 +111,7 @@ source "azure-arm" "base_image" {
 }
 
 build {
+  name    = "default image build"
   sources = ["source.azure-arm.base_image"]
 
   provisioner "shell" {
