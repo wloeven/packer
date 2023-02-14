@@ -8,3 +8,4 @@ For now the following packer deployments are in this repo:
 |name|purpose|
 |--|--|
 |[linux](azure-custom-image/linux/)|baseline devops custom image.|
+|[windows](azure-custom-image/win/)|baseline devops custom image.|
