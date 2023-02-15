@@ -223,7 +223,6 @@ build {
       "${path.root}/scripts/installers/mysql.sh",
       "${path.root}/scripts/installers/mssql-cmd-tools.sh",
       "${path.root}/scripts/installers/sqlpackage.sh",
-      "${path.root}/scripts/installers/postgresql.sh",
       "${path.root}/scripts/installers/pulumi.sh",
       "${path.root}/scripts/installers/terraform.sh",
       "${path.root}/scripts/installers/packer.sh",
