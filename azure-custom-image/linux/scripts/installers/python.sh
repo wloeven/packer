@@ -26,6 +26,9 @@ python3 -m pipx ensurepath
 setEtcEnvironmentVariable "PIPX_BIN_DIR" $PIPX_BIN_DIR
 setEtcEnvironmentVariable "PIPX_HOME" $PIPX_HOME
 prependEtcEnvironmentPath $PIPX_BIN_DIR
+
+# fix apt
+apt --fix-broken install
 # Test pipx
 if ! command -v pipx; then
     echo "pipx was not installed or not found on PATH"
