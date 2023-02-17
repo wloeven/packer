@@ -155,16 +155,6 @@
             "zip"
         ]
     },
-    "pipx": [
-        {
-            "package": "yamllint",
-            "cmd": "yamllint"
-        },
-        {
-            "package": "ansible-core",
-            "cmd": "ansible"
-        }
-    ],
     "dotnet": {
         "aptPackages": [
             "dotnet-sdk-6.0",
@@ -178,10 +168,7 @@
             { "name": "nbgv", "test": "nbgv --version", "getversion" : "nbgv --version" }
         ]
     },
-    "postgresql": {
-        "version": "14"
-    },
     "pwsh": {
-        "version": "7.2"
+        "version": "7.3"
     }
 }

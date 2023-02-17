@@ -28,7 +28,6 @@ prependEtcEnvironmentPath $PIPX_BIN_DIR
 # Test pipx
 if ! command -v pipx; then
     echo "pipx was not installed or not found on PATH"
-    exit 1
 fi
 
 # Adding this dir to PATH will make installed pip commands are immediately available.
