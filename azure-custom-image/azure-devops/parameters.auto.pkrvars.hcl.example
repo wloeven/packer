@@ -1,0 +1,13 @@
+subscription_id = "The subscription ID"
+resource_group  = "The EXISTING resourcegroup to place the image in"
+location        = "location of the resource (eu us ranz)"
+image_name      = "name of the image"
+client_app_id     = "SPN App ID"
+client_app_secret = "SPN secret"
+vnet              = "Existing reachable vnet for builder"
+subnet            = "Existing reachable subnet for builder"
+vnet_rg           = "resourcegroup of the existing vnet"
+azure_tag = {
+  tag1       = ""
+  tag2       = ""
+}
