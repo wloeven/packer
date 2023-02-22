@@ -6,6 +6,7 @@ parameters:
   artifactName: ""
   packerImageName: ""
   packerImageVersion: ""
+  packerImageGallery: ""
 
 steps:
   - download: none
@@ -29,65 +30,78 @@ steps:
       azureSubscription: ${{ parameters.azureSubscription }}
       scriptType: Filepath
       scriptPath: $(Pipeline.WorkSpace)/${{ parameters.artifactName }}/scripts/check-resources.ps1
-      scriptArguments: -SubscriptionId '${{ parameters.azureSubscription }}'
-        -location 'WestEurope'
-        -templateFile '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.bicep/main.bicep'
-        -resourceGroup '${{ parameters.azureResourceGroupName }}'
-        -imageDefinitionName '${{ parameters.packerImageName }}'
-        -imageVersion '${{ parameters.packerImageVersion }}'
+      scriptArguments: -imageVersion '${{ parameters.packerImageVersion }}'
         -imageName '${{ parameters.packerImageName }}'
       failonStandardError: "true"
       azurePowerShellVersion: "LatestVersion"
 
   - task: Packer@1
     displayName: Packer Init
+    condition: and(succeeded(), eq(variables.imageExists, 'false'))
     inputs:
-      connectedServiceType: 'azure'
+      connectedServiceType: "azure"
       azureSubscription: ${{ parameters.azureSubscription }}
-      templatePath: '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/customimage.pkr.hcl'
-      command: 'init'
+      templatePath: "$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/customimage.pkr.hcl"
+      command: "init"
       variables: |
         image_name=${{ parameters.packerImageName }}-${{ parameters.packerImageVersion }}
         resource_group=${{ parameters.azureResourceGroupName }}
-      variables-file: '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/parameters.pkrvars.hcl'
+      variables-file: "$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/parameters.pkrvars.hcl"
 
   - task: Packer@1
     displayName: Packer Validate
+    condition: and(succeeded(), eq(variables.imageExists, 'false'))
     inputs:
-      connectedServiceType: 'azure'
+      connectedServiceType: "azure"
       azureSubscription: ${{ parameters.azureSubscription }}
-      templatePath: '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/customimage.pkr.hcl'
-      command: 'validate'
+      templatePath: "$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/customimage.pkr.hcl"
+      command: "validate"
       variables: |
         image_name=${{ parameters.packerImageName }}-${{ parameters.packerImageVersion }}
         resource_group=${{ parameters.azureResourceGroupName }}
-      variables-file: '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/parameters.pkrvars.hcl'
+      variables-file: "$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/parameters.pkrvars.hcl"
 
   - task: Packer@1
     displayName: Packer build
     condition: and(succeeded(), eq(variables.imageExists, 'false'))
     inputs:
-      connectedServiceType: 'azure'
+      connectedServiceType: "azure"
       azureSubscription: ${{ parameters.azureSubscription }}
-      templatePath: '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/customimage.pkr.hcl'
-      command: 'build'
+      templatePath: "$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/customimage.pkr.hcl"
+      command: "build"
       variables: |
         image_name=${{ parameters.packerImageName }}-${{ parameters.packerImageVersion }}
         resource_group=${{ parameters.azureResourceGroupName }}
-      variables-file: '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/parameters.pkrvars.hcl'
+      variables-file: "$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.packer/parameters.pkrvars.hcl"
 
   - task: AzurePowershell@4
-    displayName: "Run script Resource values"
+    displayName: "Deploy infrastructure"
+    condition: and(succeeded(), eq(variables.imageExists, 'false'))
     inputs:
       azureSubscription: ${{ parameters.azureSubscription }}
       scriptType: Filepath
       scriptPath: $(Pipeline.WorkSpace)/${{ parameters.artifactName }}/scripts/deploy-Resources.ps1
-      scriptArguments: -SubscriptionId '${{ parameters.azureSubscription }}'
+      scriptArguments: -SubscriptionId '${{ parameters.subscriptionId }}'
         -location 'WestEurope'
         -templateFile '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.bicep/main.bicep'
         -resourceGroup '${{ parameters.azureResourceGroupName }}'
         -imageDefinitionName '${{ parameters.packerImageName }}'
+        -imageGallery '${{ parameters.packerImageGallery }}'
         -imageVersion '${{ parameters.packerImageVersion }}'
         -imageName '${{ parameters.packerImageName }}'
+      failonStandardError: "true"
+      azurePowerShellVersion: "LatestVersion"
+
+  - task: AzurePowershell@4
+    displayName: "deploy scalesets"
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }}
+      scriptType: Filepath
+      scriptPath: $(Pipeline.WorkSpace)/${{ parameters.artifactName }}/scripts/deploy-scalesets.ps1
+      scriptArguments: -location 'WestEurope'
+        -templateFile '$(Pipeline.WorkSpace)/${{ parameters.artifactName }}/.bicep/scalesets.bicep'
+        -resourceGroup '${{ parameters.azureResourceGroupName }}'
+        -imageName '${{ parameters.packerImageName }}'
+        -imageGallery '${{ parameters.packerImageGallery }}'
       failonStandardError: "true"
       azurePowerShellVersion: "LatestVersion"

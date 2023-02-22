@@ -113,7 +113,10 @@
             "xorriso",
             "xvfb",
             "xz-utils",
-            "zsync"
+            "zsync",
+            "liblttng-ust0",
+            "libkrb5-3",
+            "zlib1g"
         ],
         "cmd_packages": [
             "acl",

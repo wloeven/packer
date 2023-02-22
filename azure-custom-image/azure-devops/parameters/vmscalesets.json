@@ -1,0 +1,12 @@
+{
+    "scalesets": [
+        {
+            "name": "vmss-devops-agent",
+            "subnetName": "default",
+            "vnetName": "vnet-westeu-poc",
+            "resourceGroup": "rsg-devops-dev",
+            "adminUser": "testadminus12",
+            "location": ""
+        }
+    ]
+}

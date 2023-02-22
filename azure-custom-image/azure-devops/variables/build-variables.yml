@@ -1,0 +1,5 @@
+variables:
+  packerImageName: "devopsImage"
+  packerImageVersion: "1.0.2"
+  packerImageGallery: "lc_compute_gallery_global"
+  imageExists: ""

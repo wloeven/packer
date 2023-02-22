@@ -1,0 +1,61 @@
+name: "lc-pipeline-custom-image"
+
+trigger:
+  paths:
+    include:
+      - pipelines/lc-pipeline-custom-image
+
+variables:
+  - template: ${{ variables['System.DefaultWorkingDirectory']}}/global/variables/global-variables.yml
+
+stages:
+  - stage: build
+    displayName: Build
+    jobs:
+      - job: "Build_artifacts"
+        pool: $(defaultPool)
+        steps:
+          - task: PublishBuildArtifacts@1
+            displayName: Publish build Artifacts
+            inputs:
+              PathtoPublish: pipelines/lc-pipeline-custom-image
+              ArtifactName: $(artifactName)
+
+  - stage: validate
+    displayName: "Validate build"
+    dependsOn:
+      - build
+    jobs:
+      - job: validate
+        pool: $(defaultPool)
+        displayName: "Validate code"
+        steps:
+          - template: ${{ variables['System.DefaultWorkingDirectory']}}/global/templates/validate.yml
+            parameters:
+              artifactName: $(artifactName)
+
+  - stage: customImage
+    displayName: "Custom Image"
+    condition: or(variables['otherBranch'], variables['masterBranch'])
+    variables:
+      - template: ${{ variables['System.DefaultWorkingDirectory']}}/global/variables/dev-variables.yml
+      - template: variables/build-variables.yml
+    jobs:
+      - deployment: buildImage
+        displayName: Build Image
+        environment: ${{ variables.environment }}
+        pool: $(defaultPool)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: templates/build-image.yml
+                  parameters:
+                    azureSubscription: ${{ variables.azureSubscription }}
+                    subscriptionId: ${{ variables.subscriptionId }}
+                    environment: ${{ variables.environment }}
+                    artifactName: $(artifactName)
+                    azureResourceGroupName: ${{ variables.azureResourceGroupName }}
+                    packerImageName: ${{ variables.packerImageName }}
+                    packerImageVersion: ${{ variables.packerImageVersion }}
+                    packerImageGallery: ${{ variables.packerImageGallery }}
