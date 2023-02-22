@@ -18,9 +18,14 @@ resource vmSS 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
   }
   properties: {
     singlePlacementGroup: true
-    overprovision: true
+    overprovision: false
     constrainedMaximumCapacity: true
     upgradePolicy: {
+      automaticOSUpgradePolicy: {
+        disableAutomaticRollback: false
+        enableAutomaticOSUpgrade: false
+        useRollingUpgradePolicy: false
+      }
       mode: 'Manual'
     }
     virtualMachineProfile: {
